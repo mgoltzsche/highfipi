@@ -1,0 +1,55 @@
+{
+  "variables": {
+    "ssh_key_src": "{{env `HOME`}}/.ssh/id_rsa.pub",
+    "device_tree_overlay": "hifiberry-dacplus",
+    "image_home_dir": "/home/pi"
+  },
+  "builders": [
+    {
+      "type": "arm-image",
+      "iso_url": "https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-05-28/2021-05-07-raspios-buster-armhf-lite.zip",
+      "iso_checksum": "c5dad159a2775c687e9281b1a0e586f7471690ae28f2f2282c90e7d59f64273c",
+      "target_image_size": 4294967296
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir {{user `image_home_dir`}}/.ssh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{user `ssh_key_src`}}",
+      "destination": "{{user `image_home_dir`}}/.ssh/authorized_keys"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sed '/PasswordAuthentication/d' -i /etc/ssh/sshd_config",
+        "echo >> /etc/ssh/sshd_config",
+        "echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "touch /boot/ssh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "images/highfipi-speaker/asound.conf",
+      "destination": "/etc/asound.conf"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "apt-get update",
+        "apt-get install -y snapclient",
+        "sed -Ei 's/^dtparam=audio=on/dtoverlay={{user `device_tree_overlay`}}/' /boot/config.txt && grep -q '{{user `device_tree_overlay`}}' /boot/config.txt"
+      ]
+    }
+  ]
+}
