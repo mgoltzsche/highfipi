@@ -26,7 +26,10 @@ $(addprefix docker-build-,$(IMAGES)): docker-build-%:
 
 clean:
 	rm -rf $(BIN_DIR)
-	rm -rf output-arm-image
+	rm -rf ./output-arm-image
+
+clean-all: clean
+	rm -rf ./packer_cache
 
 $(PACKER):
 	$(call go-get-tool,$(PACKER),github.com/hashicorp/packer@$(PACKER_VERSION))

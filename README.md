@@ -9,7 +9,7 @@ The image(s) defined here are built using [Packer](https://github.com/hashicorp/
 
 ## Build the image
 
-Build the [snapcast](https://github.com/badaix/snapcast) client image (requires `go`, `qemu-user-static` and `kpartx`):
+Build the [snapcast](https://github.com/badaix/snapcast) client image (requires `golang`, `qemu-user-static` and `kpartx`; eg. on Debian-based distros, call  `sudo apt-get install golang qemu-user-static kpartx`):
 
 ```sh
 make build-highfipi-speaker
@@ -44,4 +44,4 @@ If you boot your Raspberry Pi from that SD card, it will connect to a [snapcast]
 
 You could make a server run on another Raspberry Pi or on your workstation or laptop.
 [This example](https://gist.github.com/mgoltzsche/8a08cd11c5d1dad76096a5d139322446) shows how you can make pulseaudio stream into snapcast, allowing you to select "Snapcast" as a virtual device within pulseaudio's `pavucontrol` GUI in order to play audio from your machine on all connected snapcast clients / speakers synchronously.
-_(However the audio is not in sync with a locally playing video unfortunately.)_
+_(However the audio is not in sync with locally playing video unfortunately.)_

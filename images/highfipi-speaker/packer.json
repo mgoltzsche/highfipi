@@ -1,6 +1,6 @@
 {
   "variables": {
-    "ssh_key_src": "{{env `HOME`}}/.ssh/id_rsa.pub",
+    "ssh_authorized_keys_file": "{{env `HOME`}}/.ssh/id_rsa.pub",
     "device_tree_overlay": "hifiberry-dacplus",
     "image_home_dir": "/home/pi"
   },
@@ -21,20 +21,16 @@
     },
     {
       "type": "file",
-      "source": "{{user `ssh_key_src`}}",
+      "source": "{{user `ssh_authorized_keys_file`}}",
       "destination": "{{user `image_home_dir`}}/.ssh/authorized_keys"
     },
     {
       "type": "shell",
       "inline": [
+        "chmod 644 {{user `image_home_dir`}}/.ssh/authorized_keys",
         "sed '/PasswordAuthentication/d' -i /etc/ssh/sshd_config",
         "echo >> /etc/ssh/sshd_config",
-        "echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config"
-      ]
-    },
-    {
-      "type": "shell",
-      "inline": [
+        "echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config",
         "touch /boot/ssh"
       ]
     },
