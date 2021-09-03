@@ -1,7 +1,12 @@
 {
   "variables": {
-    "ssh_authorized_keys_file": "{{env `HOME`}}/.ssh/id_rsa.pub",
+    "wifi_ssid": "",
+    "wifi_password": "",
+    "wifi_country": "DE",
+    "hostname": "highfipi-speaker",
     "device_tree_overlay": "hifiberry-dacplus",
+    "snapcast_version": "0.25.0",
+    "ssh_authorized_keys_file": "{{env `HOME`}}/.ssh/id_rsa.pub",
     "image_home_dir": "/home/pi"
   },
   "builders": [
@@ -13,6 +18,16 @@
     }
   ],
   "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "mv /etc/wpa_supplicant/wpa_supplicant.conf /boot/wpa_supplicant.conf",
+        "sed -Ei '/^country=/d' /boot/wpa_supplicant.conf",
+        "echo 'country={{user `wifi_country`}}' >> /boot/wpa_supplicant.conf",
+        "[ -z \"{{user `wifi_ssid`}}\" ] || [ -z \"{{user `wifi_password`}}\" ] || (wpa_passphrase \"{{user `wifi_ssid`}}\" \"{{user `wifi_password`}}\" | sed -e 's/#.*$//' -e '/^$/d' >> /boot/wpa_supplicant.conf && echo WLAN enabled)",
+        "echo 1 > '/var/lib/systemd/rfkill/platform-soc:bluetooth'"
+      ]
+    },
     {
       "type": "shell",
       "inline": [
@@ -36,15 +51,28 @@
     },
     {
       "type": "file",
-      "source": "images/highfipi-speaker/asound.conf",
+      "source": "./conf/asound.conf",
       "destination": "/etc/asound.conf"
     },
     {
       "type": "shell",
       "inline": [
         "apt-get update",
-        "apt-get install -y snapclient",
+        "apt-get install -y vim libsoxr0 libopus0 libflac8 libogg0 libvorbis0a libpulse0 libavahi-client3",
+        "curl -fsSLo /tmp/snapclient.deb https://github.com/badaix/snapcast/releases/download/v{{user `snapcast_version`}}/snapclient_{{user `snapcast_version`}}-1_armhf.deb",
+        "dpkg -i /tmp/snapclient.deb"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
         "sed -Ei 's/^dtparam=audio=on/dtoverlay={{user `device_tree_overlay`}}/' /boot/config.txt && grep -q '{{user `device_tree_overlay`}}' /boot/config.txt"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo {{user `hostname`}} > /etc/hostname"
       ]
     }
   ]

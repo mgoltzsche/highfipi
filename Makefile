@@ -7,10 +7,17 @@ PACKER_BUILDER_ARM_IMAGE_VERSION = 920cc8d3c01eb3f3a3889ec63441924de963b858
 IMAGES := $(shell ls images)
 BUILD_TARGETS = $(addprefix build-,$(IMAGES))
 
+WIFI_SSID ?=
+WIFI_PASSWORD ?=
+
 build: $(BUILD_TARGETS)
 
+build-speaker: .require-wifi-credentials
 $(BUILD_TARGETS): build-%: $(PACKER) $(PACKER_BUILDER_ARM_IMAGE)
-	$(PACKER) build ./images/$*/packer.json
+	$(PACKER) build --var="wifi_ssid=$(WIFI_SSID)" --var="wifi_password=$(WIFI_PASSWORD)" ./images/$*/packer.json
+
+.require-wifi-credentials:
+	@[ "$(WIFI_SSID)" ] && [ "$(WIFI_PASSWORD)" ] || (echo "WIFI_SSID and WIFI_PASSWORD have not been specified" >&2; false)
 
 docker-build: $(addprefix docker-build-,$(IMAGES))
 
@@ -25,10 +32,10 @@ $(addprefix docker-build-,$(IMAGES)): docker-build-%:
 		quay.io/solo-io/packer-builder-arm-image:v0.1.6 build images/$*/packer.json
 
 clean:
-	rm -rf $(BIN_DIR)
 	rm -rf ./output-arm-image
 
 clean-all: clean
+	rm -rf $(BIN_DIR)
 	rm -rf ./packer_cache
 
 $(PACKER):

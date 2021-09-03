@@ -12,13 +12,13 @@ The image(s) defined here are built using [Packer](https://github.com/hashicorp/
 Build the [snapcast](https://github.com/badaix/snapcast) client image (requires `golang`, `qemu-user-static` and `kpartx`; eg. on Debian-based distros, call  `sudo apt-get install golang qemu-user-static kpartx`):
 
 ```sh
-make build-highfipi-speaker
+sudo make build-speaker
 ```
 
 Alternatively you can build the image using `docker`:
 
 ```sh
-make docker-build-highfipi-speaker
+make docker-build-speaker WIFI_SSID=<YOUR_WIFI_NAME> WIFI_PASSWORD=<YOUR_WIFI_PASSWORD>
 ```
 
 _(While this does not require dependencies other than `docker`, it fails randomly due to asynchronously populated loopback devices within the container.)_  
@@ -31,10 +31,13 @@ Both commands write the image to `./output-arm-image/image`.
 You can write the image to an SD card as follows:
 
 ```sh
-dd bs=4M if=./output-arm-image/image of=/dev/sdX
+TARGET_DEVICE=/dev/sdX
+sudo umount ${TARGET_DEVICE}* || true
+sudo dd bs=4M if=./output-arm-image/image of="$TARGET_DEVICE"
+sync
 ```
 
-Please make sure to replace `/dev/sdX` carefully with the path to the device you want to write the image to - specifying the wrong device can cause data loss!
+**ATTENTION:** Please replace `/dev/sdX` carefully with the path to the device you want to write the image to - specifying the wrong device can cause data loss!
 To find the correct device path, you can use `lsblk`.  
 
 If you boot your Raspberry Pi from that SD card, it will connect to a [snapcast](https://github.com/badaix/snapcast) server within your local network automatically.
