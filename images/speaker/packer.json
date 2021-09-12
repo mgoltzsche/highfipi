@@ -58,9 +58,10 @@
       "type": "shell",
       "inline": [
         "apt-get update",
-        "apt-get install -y vim libsoxr0 libopus0 libflac8 libogg0 libvorbis0a libpulse0 libavahi-client3",
-        "curl -fsSLo /tmp/snapclient.deb https://github.com/badaix/snapcast/releases/download/v{{user `snapcast_version`}}/snapclient_{{user `snapcast_version`}}-1_armhf.deb",
-        "dpkg -i /tmp/snapclient.deb"
+        "apt-get install -y vim libsoxr0 libopus0 libflac8 libogg0 libvorbis0a libavahi-client3",
+        "curl -fsSLo /tmp/snapclient.deb https://github.com/badaix/snapcast/releases/download/v{{user `snapcast_version`}}/snapclient_{{user `snapcast_version`}}-1_without-pulse_armhf.deb",
+        "dpkg -i /tmp/snapclient.deb",
+        "sed -Ei 's/^SNAPCLIENT_OPTS=.*/SNAPCLIENT_OPTS=\"--mixer hardware:Digital\"/' /etc/default/snapclient"
       ]
     },
     {
