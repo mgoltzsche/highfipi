@@ -1,11 +1,11 @@
 # highfipi
 
-Rasbian based SD card images to run a wireless multi-room audio system on [Raspberry Pi](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)s.
+Rasbian based SD card images to run a wireless multi-room audio system using [mopidy](https://mopidy.com/) and [snapcast](https://github.com/badaix/snapcast) on [Raspberry Pi](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)s.
 
 
 ## Build the images
 
-The image(s) defined within this repository are built using [Packer](https://github.com/hashicorp/packer) along with the [arm-image builder](https://github.com/solo-io/packer-builder-arm-image).  
+The images defined within this repository are built using [Packer](https://github.com/hashicorp/packer) along with the [arm-image builder](https://github.com/solo-io/packer-builder-arm-image).  
 
 The `Makefile` specifies a build target for each image.
 Each of these build targets writes an image into `./output-arm-image/image`.
@@ -34,7 +34,7 @@ The speaker image comes with a [snapcast](https://github.com/badaix/snapcast) cl
 You can build it as follows:
 
 ```sh
-sudo make build-speaker WIFI_SSID=<WIFI_NAME> WIFI_PASSWORD='<PASSWORD>' WIFI_COUNTRY=<TWO_LETTER_COUNTRY_CODE> SPEAKER_NAME=<HOSTNAME>
+sudo make build-speaker WIFI_SSID=<WIFI_NAME> WIFI_PASSWORD='<PASSWORD>' WIFI_COUNTRY=<TWO_LETTER_COUNTRY_CODE> SPEAKER_HOSTNAME=<HOSTNAME>
 ```
 
 Alternatively you can build the image using `docker`:

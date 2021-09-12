@@ -24,7 +24,6 @@ An attempt to make it work:
         "chmod +x /user/local/bin/spdif2pi",
         "echo dtparam=spi=on >> /boot/config.txt",
         "sed -Ei '/^source = .+/a source = alsa:\/\/?name=spdif-input\&device=default' /etc/snapserver.conf"
-        "" # this fails without an error message.
       ]
     },
 ```
