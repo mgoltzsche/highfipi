@@ -7,17 +7,18 @@ PACKER_BUILDER_ARM_IMAGE_VERSION = 920cc8d3c01eb3f3a3889ec63441924de963b858
 IMAGES := $(shell ls images)
 BUILD_TARGETS = $(addprefix build-,$(IMAGES))
 
+WIFI_COUNTRY ?= DE
 WIFI_SSID ?=
 WIFI_PASSWORD ?=
+SPEAKER_HOSTNAME = highfipi-speaker
 
 build: $(BUILD_TARGETS)
 
-build-speaker: .require-wifi-credentials
-$(BUILD_TARGETS): build-%: $(PACKER) $(PACKER_BUILDER_ARM_IMAGE)
-	$(PACKER) build --var="wifi_ssid=$(WIFI_SSID)" --var="wifi_password=$(WIFI_PASSWORD)" ./images/$*/packer.json
+build-speaker docker-build-speaker: .require-wifi-credentials
+build-speaker docker-build-speaker: PACKER_VARS = --var="wifi_ssid=$(WIFI_SSID)" --var="wifi_password=$(WIFI_PASSWORD)" --var="wifi_country=$(WIFI_COUNTRY)" --var="hostname=$(SPEAKER_HOSTNAME)"
 
-.require-wifi-credentials:
-	@[ "$(WIFI_SSID)" ] && [ "$(WIFI_PASSWORD)" ] || (echo "WIFI_SSID and WIFI_PASSWORD have not been specified" >&2; false)
+$(BUILD_TARGETS): build-%: $(PACKER) $(PACKER_BUILDER_ARM_IMAGE)
+	$(PACKER) build $(PACKER_VARS) ./images/$*/packer.json
 
 docker-build: $(addprefix docker-build-,$(IMAGES))
 
@@ -29,7 +30,11 @@ $(addprefix docker-build-,$(IMAGES)): docker-build-%:
 		-v $(PROJECT_DIR):/build:ro \
 		-v $(PROJECT_DIR)/packer_cache:/build/packer_cache \
 		-v $(PROJECT_DIR)/output-arm-image:/build/output-arm-image \
-		quay.io/solo-io/packer-builder-arm-image:v0.1.6 build images/$*/packer.json
+		quay.io/solo-io/packer-builder-arm-image:v0.1.6 \
+		build $(PACKER_VARS) ./images/$*/packer.json
+
+.require-wifi-credentials:
+	@[ "$(WIFI_SSID)" ] && [ "$(WIFI_PASSWORD)" ] || (echo "Please specify WIFI_SSID and WIFI_PASSWORD" >&2; false)
 
 clean:
 	rm -rf ./output-arm-image

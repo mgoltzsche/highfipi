@@ -1,0 +1,100 @@
+{
+  "variables": {
+    "device_tree_overlay": "hifiberry-dacplusdsp",
+    "snapcast_version": "0.25.0",
+    "hifiberry_dsp_version": "v0.20",
+    "hifiberry_os_version": "v20210804",
+    "ssh_authorized_keys_file": "{{env `HOME`}}/.ssh/id_rsa.pub",
+    "image_home_dir": "/home/pi"
+  },
+  "builders": [
+    {
+      "type": "arm-image",
+      "iso_url": "https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-05-28/2021-05-07-raspios-buster-armhf-lite.zip",
+      "iso_checksum": "c5dad159a2775c687e9281b1a0e586f7471690ae28f2f2282c90e7d59f64273c",
+      "target_image_size": 4294967296
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir {{user `image_home_dir`}}/.ssh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{user `ssh_authorized_keys_file`}}",
+      "destination": "{{user `image_home_dir`}}/.ssh/authorized_keys"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "chmod 644 {{user `image_home_dir`}}/.ssh/authorized_keys",
+        "sed '/PasswordAuthentication/d' -i /etc/ssh/sshd_config",
+        "echo >> /etc/ssh/sshd_config",
+        "echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config",
+        "touch /boot/ssh"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "apt-get update",
+        "apt-get install -y vim libsoxr0 libopus0 libflac8 libogg0 libvorbis0a libpulse0 libavahi-client3",
+        "curl -fsSLo /tmp/snapserver.deb https://github.com/badaix/snapcast/releases/download/v{{user `snapcast_version`}}/snapserver_{{user `snapcast_version`}}-1_armhf.deb",
+        "dpkg -i /tmp/snapserver.deb"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "wget -q -O - https://apt.mopidy.com/mopidy.gpg | apt-key add -",
+        "wget -q -O /etc/apt/sources.list.d/mopidy.list https://apt.mopidy.com/buster.list",
+        "apt-get update",
+        "apt-get install -y python3-pip mopidy mopidy-mpd mopidy-alsamixer mopidy-local mopidy-dleyna mopidy-youtube mopidy-soundcloud mopidy-podcast mopidy-somafm mopidy-tunein mopidy-dirble",
+        "python3 -m pip install Mopidy-Iris Mopidy-Autoplay",
+        "sed -Ei -e '/\\[Service\\]/a ExecStartPre=-sh -c \"mkfifo -m 640 /tmp/snapfifo && chown mopidy:snapserver /tmp/snapfifo\"' -e '/\\[Unit\\]/a Before=snapserver.service' /lib/systemd/system/mopidy.service",
+        "systemctl enable mopidy.service"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "./images/streamer/mopidy-conf/mopidy-http.conf",
+      "destination": "/usr/share/mopidy/conf.d/mopidy-http.conf"
+    },
+    {
+      "type": "file",
+      "source": "./images/streamer/mopidy-conf/mopidy-mpd.conf",
+      "destination": "/usr/share/mopidy/conf.d/mopidy-mpd.conf"
+    },
+    {
+      "type": "file",
+      "source": "./images/streamer/mopidy-conf/mopidy-audio2snapserver.conf",
+      "destination": "/usr/share/mopidy/conf.d/mopidy-audio2snapserver.conf"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "chmod 644 /usr/share/mopidy/conf.d/*"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo highfipi-streamer > /etc/hostname"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "./conf/asound.conf",
+      "destination": "/etc/asound.conf"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sed -Ei 's/^dtparam=audio=on/dtoverlay={{user `device_tree_overlay`}}/' /boot/config.txt && grep -q '{{user `device_tree_overlay`}}' /boot/config.txt"
+      ]
+    }
+  ]
+}
