@@ -1,6 +1,6 @@
 # highfipi
 
-Rasbian based SD card images to run a wireless multi-room audio system using [mopidy](https://mopidy.com/) and [snapcast](https://github.com/badaix/snapcast) on [Raspberry Pi](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)s.
+Raspbian based SD card images to run a wireless multi-room audio system using [mopidy](https://mopidy.com/) and [snapcast](https://github.com/badaix/snapcast) on [Raspberry Pi](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)s.
 
 
 ## Build the images
@@ -14,7 +14,7 @@ Each of these build targets writes an image into `./output-arm-image/image`.
 
 To build the SD card images, you need to have the following tools installed on your host:
 
-* Golang >=1.13
+* Golang >=1.16
 * qemu-user-static
 * kpartx
 
@@ -66,8 +66,6 @@ Please note that the streamer should be connected via ethernet in order to free 
 Correspondingly the streamer disables WLAN by default.  
 
 Once you booted a Raspberry Pi from that image, you can access [Iris](https://github.com/jaedb/iris) (a mopidy web UI) at [http://highfipi-streamer:6680/iris](http://highfipi-streamer:6680/iris) within your local network.  
-
-However please note that there are some bugs (caused by gstreamer apparently): it stutters initially when starting playback, volume changes are effective only after some delay and when stopping playback gstreamer keeps looping what was played previously infinitely until you play another track.  
 
 You may wish to install additional mopidy plugins and configure authentication for them, as it is needed for eg. [mopidy-soundcloud](https://github.com/mopidy/mopidy-soundcloud) and [mopidy-youtube](https://github.com/natumbri/mopidy-youtube).
 You'd have to do that manually after booting a Raspberry Pi from the image by placing a corresponding configuration file into `/usr/share/mopidy/conf.d/` and restarting mopidy using `sudo systemctl restart mopidy`.  

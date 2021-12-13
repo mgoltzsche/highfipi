@@ -14,8 +14,8 @@ SPEAKER_HOSTNAME = highfipi-speaker
 
 build: $(BUILD_TARGETS)
 
-build-speaker docker-build-speaker: .require-wifi-credentials
-build-speaker docker-build-speaker: PACKER_VARS = --var="wifi_ssid=$(WIFI_SSID)" --var="wifi_password=$(WIFI_PASSWORD)" --var="wifi_country=$(WIFI_COUNTRY)" --var="hostname=$(SPEAKER_HOSTNAME)"
+build-speaker docker-build-speaker docker-build-podpourpi: .require-wifi-credentials
+build-speaker docker-build-speaker docker-build-podpourpi: PACKER_VARS = --var="wifi_ssid=$(WIFI_SSID)" --var="wifi_password=$(WIFI_PASSWORD)" --var="wifi_country=$(WIFI_COUNTRY)" --var="hostname=$(SPEAKER_HOSTNAME)"
 
 $(BUILD_TARGETS): build-%: $(PACKER) $(PACKER_BUILDER_ARM_IMAGE)
 	$(PACKER) build $(PACKER_VARS) ./images/$*/packer.json

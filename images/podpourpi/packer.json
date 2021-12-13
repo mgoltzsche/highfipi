@@ -3,11 +3,10 @@
     "wifi_ssid": "",
     "wifi_password": "",
     "wifi_country": "DE",
-    "hostname": "highfipi-speaker",
-    "device_tree_overlay": "hifiberry-dacplus",
-    "snapcast_version": "0.25.0",
+    "hostname": "raspberrypi",
     "ssh_authorized_keys_file": "{{env `HOME`}}/.ssh/id_rsa.pub",
-    "image_home_dir": "/home/pi"
+    "image_home_dir": "/home/pi",
+    "podman_version": "v3.4.2"
   },
   "builders": [
     {
@@ -44,37 +43,42 @@
       "type": "shell",
       "inline": [
         "chmod 644 {{user `image_home_dir`}}/.ssh/authorized_keys",
-        "sed '/PasswordAuthentication/d' -i /etc/ssh/sshd_config",
-        "echo >> /etc/ssh/sshd_config",
-        "echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config",
         "touch /boot/ssh"
-      ]
-    },
-    {
-      "type": "file",
-      "source": "./conf/asound.conf",
-      "destination": "/etc/asound.conf"
-    },
-    {
-      "type": "shell",
-      "inline": [
-        "apt-get update",
-        "apt-get install -y vim libsoxr0 libopus0 libflac8 libogg0 libvorbis0a libavahi-client3",
-        "curl -fsSLo /tmp/snapclient.deb https://github.com/badaix/snapcast/releases/download/v{{user `snapcast_version`}}/snapclient_{{user `snapcast_version`}}-1_without-pulse_armhf.deb",
-        "dpkg -i /tmp/snapclient.deb",
-        "sed -Ei 's/^SNAPCLIENT_OPTS=.*/SNAPCLIENT_OPTS=\"--mixer hardware:Digital\"/' /etc/default/snapclient"
-      ]
-    },
-    {
-      "type": "shell",
-      "inline": [
-        "sed -Ei 's/^dtparam=audio=on/dtoverlay={{user `device_tree_overlay`}}/' /boot/config.txt && grep -q '{{user `device_tree_overlay`}}' /boot/config.txt"
       ]
     },
     {
       "type": "shell",
       "inline": [
         "echo {{user `hostname`}} > /etc/hostname"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "curl -fsSL https://github.com/mgoltzsche/podman-static/releases/download/{{user `podman_version`}}/podman-linux-arm64.tar.gz | tar -xzf - podman-linux-arm64/usr podman-linux-arm64/etc --strip-components=1",
+        "pip3 install pyyaml",
+        "curl -Lo /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/v2.0.1/docker-compose-linux-aarch64",
+        "chmod +x /usr/local/bin/docker-compose",
+        "docker-compose -v",
+        "addgroup --gid 9999 docker"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "./systemd/docker.socket",
+      "destination": "/lib/systemd/system/docker.socket"
+    },
+    {
+      "type": "file",
+      "source": "./systemd/docker.service",
+      "destination": "/lib/systemd/system/docker.service"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "systemctl daemon-reload",
+        "systemctl enable docker.service docker.socket",
+        "bash <(curl -L https://github.com/balena-io/wifi-connect/raw/v4.4.6/scripts/raspbian-install.sh)"
       ]
     }
   ]
